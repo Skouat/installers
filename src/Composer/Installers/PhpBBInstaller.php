@@ -29,22 +29,21 @@ class PhpBBInstaller extends BaseInstaller
     {
         if ($vars['type'] === 'extension-language')
         {
-            $pattern = '#^([a-z0-9]+)-([a-z0-9]+)-language-(.+)$#';
-            return $this->inflectVars($vars, 'language', $pattern);
+            return $this->inflectVars($vars, 'language');
         }
 
         if ($vars['type'] === 'extension-style')
         {
-            $pattern = '#^([a-z0-9]+)-([a-z0-9]+)-style-(.+)$#';
-            return $this->inflectVars($vars, 'style', $pattern);
+            return $this->inflectVars($vars, 'style');
         }
 
         return $vars;
     }
 
-    protected function inflectVars($vars, $type, $pattern)
+    protected function inflectVars($vars, $type)
     {
         $extra = $this->package->getExtra();
+        $pattern = '([a-zA-Z0-9_\x7f-\xff]{2,})-([a-zA-Z0-9_\x7f-\xff]{2,})-'. $type . '-([a-zA-Z0-9_\x7f-\xff]{2,})$#';
 
         if (preg_match($pattern, $vars['name'], $matches))
         {
