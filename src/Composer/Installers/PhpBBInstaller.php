@@ -1,8 +1,10 @@
 <?php
+
 namespace Composer\Installers;
 
 class PhpBBInstaller extends BaseInstaller
 {
+    /** @var array<string, string> */
     protected $locations = array(
         'extension'          => 'ext/{$vendor}/{$name}/',
         'extension-language' => 'ext/{$vendor}/language/{$name}/',

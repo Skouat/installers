@@ -1,4 +1,5 @@
 <?php
+
 namespace Composer\Installers\Test;
 
 use Composer\Composer;
@@ -7,30 +8,33 @@ use Composer\Installers\Installer;
 use Composer\Package\Package;
 use Composer\Package\RootPackage;
 use Composer\Util\Filesystem;
+use Composer\Repository\InstalledRepositoryInterface;
+use Composer\IO\IOInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class InstallerTest extends TestCase
 {
+    /** @var Composer */
     private $composer;
+    /** @var Config */
     private $config;
+    /** @var string */
     private $vendorDir;
+    /** @var string */
     private $binDir;
-    private $dm;
+    /** @var InstalledRepositoryInterface&MockObject */
     private $repository;
+    /** @var IOInterface */
     private $io;
+    /** @var Filesystem */
     private $fs;
 
-    /**
-     * setUp
-     *
-     * @return void
-     */
-    public function setUp()
+    public function setUp(): void
     {
         $this->fs = new Filesystem;
 
-        $this->composer = new Composer();
-        $this->config = new Config();
-        $this->composer->setConfig($this->config);
+        $this->composer = $this->getComposer();
+        $this->config = $this->composer->getConfig();
 
         $this->vendorDir = realpath(sys_get_temp_dir()) . DIRECTORY_SEPARATOR . 'baton-test-vendor';
         $this->ensureDirectoryExistsAndClear($this->vendorDir);
@@ -45,51 +49,30 @@ class InstallerTest extends TestCase
             ),
         ));
 
-        $this->dm = $this->getMockBuilder('Composer\Downloader\DownloadManager')
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->composer->setDownloadManager($this->dm);
-
-        $this->repository = $this->getMock('Composer\Repository\InstalledRepositoryInterface');
-        $this->io = $this->getMock('Composer\IO\IOInterface');
-
-        $consumerPackage = new RootPackage('foo/bar', '1.0.0', '1.0.0');
-        $this->composer->setPackage($consumerPackage);
-
+        $this->repository = $this->getMockBuilder(InstalledRepositoryInterface::class)->getMock();
+        $this->io = $this->getMockIO();
     }
 
-    /**
-     * tearDown
-     *
-     * @return void
-     */
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->fs->removeDirectory($this->vendorDir);
         $this->fs->removeDirectory($this->binDir);
     }
 
     /**
-     * testSupports
-     *
-     * @return void
-     *
-     * @dataProvider dataForTestSupport
+     * @dataProvider supportsProvider
      */
-    public function testSupports($type, $expected)
+    public function testSupports(string $type, bool $expected): void
     {
         $installer = new Installer($this->io, $this->composer);
         $this->assertSame($expected, $installer->supports($type), sprintf('Failed to show support for %s', $type));
     }
 
-    /**
-     * dataForTestSupport
-     */
-    public function dataForTestSupport()
+    public function supportsProvider(): array
     {
         return array(
             array('agl-module', true),
-            array('aimeos-extension', true),
+            array('akaunting-module', true),
             array('annotatecms-module', true),
             array('annotatecms-component', true),
             array('annotatecms-service', true),
@@ -97,6 +80,8 @@ class InstallerTest extends TestCase
             array('bitrix-module', true),
             array('bitrix-component', true),
             array('bitrix-theme', true),
+            array('botble-plugin', true),
+            array('botble-theme', true),
             array('bonefish-package', true),
             array('cakephp', false),
             array('cakephp-', false),
@@ -114,7 +99,11 @@ class InstallerTest extends TestCase
             array('concrete5-theme', true),
             array('concrete5-core', true),
             array('concrete5-update', true),
-            array('craft-plugin', true),
+            array('concretecms-block', true),
+            array('concretecms-package', true),
+            array('concretecms-theme', true),
+            array('concretecms-core', true),
+            array('concretecms-update', true),
             array('croogo-plugin', true),
             array('croogo-theme', true),
             array('decibel-app', true),
@@ -153,9 +142,7 @@ class InstallerTest extends TestCase
             array('imagecms-module', true),
             array('imagecms-library', true),
             array('itop-extension', true),
-            array('joomla-library', true),
             array('kanboard-plugin', true),
-            array('kirby-plugin', true),
             array('known-plugin', true),
             array('known-theme', true),
             array('known-console', true),
@@ -171,7 +158,9 @@ class InstallerTest extends TestCase
             array('magento-library', true),
             array('majima-plugin', true),
             array('mako-package', true),
+            array('matomo-plugin', true),
             array('mantisbt-plugin', true),
+            array('miaoxing-plugin', true),
             array('modx-extra', true),
             array('modxevo-snippet', true),
             array('modxevo-plugin', true),
@@ -185,17 +174,21 @@ class InstallerTest extends TestCase
             array('moodle-mod', true),
             array('october-module', true),
             array('october-plugin', true),
+            array('quicksilver-script', true),
+            array('quicksilver-module', true),
             array('piwik-plugin', true),
             array('pxcms-module', true),
             array('pxcms-theme', true),
             array('phpbb-extension', true),
-            array('pimcore-plugin', true),
             array('plentymarkets-plugin', true),
             array('ppi-module', true),
             array('prestashop-module', true),
             array('prestashop-theme', true),
             array('puppet-module', true),
             array('porto-container', true),
+            array('processwire-module', true),
+            array('quicksilver-script', true),
+            array('quicksilver-module', true),
             array('radphp-bundle', true),
             array('redaxo-addon', true),
             array('redaxo-bestyle-plugin', true),
@@ -214,18 +207,21 @@ class InstallerTest extends TestCase
             array('silverstripe-theme', true),
             array('smf-module', true),
             array('smf-theme', true),
+            array('starbug-module', true),
+            array('starbug-theme', true),
+            array('starbug-custom-module', true),
+            array('starbug-custom-theme', true),
             array('sydes-module', true),
             array('sydes-theme', true),
             array('sylius-theme', true),
-            array('symfony1-plugin', true),
+            array('tastyigniter-extension', true),
+            array('tastyigniter-theme', true),
             array('thelia-module', true),
             array('thelia-frontoffice-template', true),
             array('thelia-backoffice-template', true),
             array('thelia-email-template', true),
             array('tusk-task', true),
             array('tusk-asset', true),
-            array('typo3-flow-plugin', true),
-            array('typo3-cms-extension', true),
             array('userfrosting-sprinkle', true),
             array('vanilla-plugin', true),
             array('vanilla-theme', true),
@@ -260,28 +256,23 @@ class InstallerTest extends TestCase
     }
 
     /**
-     * testInstallPath
-     *
-     * @dataProvider dataForTestInstallPath
+     * @dataProvider installPathProvider
      */
-    public function testInstallPath($type, $path, $name, $version = '1.0.0')
+    public function testInstallPath(string $type, string $path, string $name, string $version = '1.0.0'): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package($name, $version, $version);
 
         $package->setType($type);
         $result = $installer->getInstallPath($package);
-        $this->assertEquals($path, $result);
+        $this->assertEquals(getcwd() . '/' . $path, $result);
     }
 
-    /**
-     * dataFormTestInstallPath
-     */
-    public function dataForTestInstallPath()
+    public function installPathProvider(): array
     {
         return array(
             array('agl-module', 'More/MyTestPackage/', 'agl/my_test-package'),
-            array('aimeos-extension', 'ext/ai-test/', 'author/ai-test'),
+            array('akaunting-module', 'modules/MyPackage', 'shama/MyPackage'),
             array('annotatecms-module', 'addons/modules/my_module/', 'vysinsky/my_module'),
             array('annotatecms-component', 'addons/components/my_component/', 'vysinsky/my_component'),
             array('annotatecms-service', 'addons/services/my_service/', 'vysinsky/my_service'),
@@ -292,6 +283,8 @@ class InstallerTest extends TestCase
             array('bitrix-d7-module', 'bitrix/modules/author.my_module/', 'author/my_module'),
             array('bitrix-d7-component', 'bitrix/components/author/my_component/', 'author/my_component'),
             array('bitrix-d7-template', 'bitrix/templates/author_my_template/', 'author/my_template'),
+            array('botble-plugin', 'platform/plugins/my_plugin/', 'author/my_plugin'),
+            array('botble-theme', 'platform/themes/my_theme/', 'author/my_theme'),
             array('bonefish-package', 'Packages/bonefish/package/', 'bonefish/package'),
             array('cakephp-plugin', 'Plugin/Ftp/', 'shama/ftp'),
             array('chef-cookbook', 'Chef/mre/my_cookbook/', 'mre/my_cookbook'),
@@ -304,7 +297,11 @@ class InstallerTest extends TestCase
             array('concrete5-theme', 'application/themes/concrete5_theme/', 'remo/concrete5_theme'),
             array('concrete5-core', 'concrete/', 'concrete5/core'),
             array('concrete5-update', 'updates/concrete5/', 'concrete5/concrete5'),
-            array('craft-plugin', 'craft/plugins/my_plugin/', 'mdcpepper/my_plugin'),
+            array('concretecms-block', 'application/blocks/concretecms_block/', 'remo/concretecms_block'),
+            array('concretecms-package', 'packages/concretecms_package/', 'remo/concretecms_package'),
+            array('concretecms-theme', 'application/themes/concretecms_theme/', 'remo/concretecms_theme'),
+            array('concretecms-core', 'concrete/', 'concretecms/core'),
+            array('concretecms-update', 'updates/concretecms/', 'concretecms/concretecms'),
             array('croogo-plugin', 'Plugin/Sitemaps/', 'fahad19/sitemaps'),
             array('croogo-theme', 'View/Themed/Readable/', 'rchavik/readable'),
             array('decibel-app', 'app/someapp/', 'author/someapp'),
@@ -343,9 +340,7 @@ class InstallerTest extends TestCase
             array('imagecms-module', 'application/modules/my_module/', 'shama/my_module'),
             array('imagecms-library', 'application/libraries/my_library/', 'shama/my_library'),
             array('itop-extension', 'extensions/my_extension/', 'shama/my_extension'),
-            array('joomla-plugin', 'plugins/my_plugin/', 'shama/my_plugin'),
             array('kanboard-plugin', 'plugins/my_plugin/', 'shama/my_plugin'),
-            array('kirby-plugin', 'site/plugins/my_plugin/', 'shama/my_plugin'),
             array('known-plugin', 'IdnoPlugins/SamplePlugin/', 'known/SamplePlugin'),
             array('known-theme', 'Themes/SampleTheme/', 'known/SampleTheme'),
             array('known-console', 'ConsolePlugins/SampleConsolePlugin/', 'known/SampleConsolePlugin'),
@@ -372,18 +367,23 @@ class InstallerTest extends TestCase
             array('modxevo-lib', 'assets/lib/my_lib/', 'shama/my_lib'),
             array('mako-package', 'app/packages/my_package/', 'shama/my_package'),
             array('mantisbt-plugin', 'plugins/MyPlugin/', 'shama/my_plugin'),
+            array('matomo-plugin', 'plugins/VisitSummary/', 'shama/visit-summary'),
             array('mediawiki-extension', 'extensions/APC/', 'author/APC'),
             array('mediawiki-extension', 'extensions/APC/', 'author/APC-extension'),
             array('mediawiki-extension', 'extensions/UploadWizard/', 'author/upload-wizard'),
             array('mediawiki-extension', 'extensions/SyntaxHighlight_GeSHi/', 'author/syntax-highlight_GeSHi'),
             array('mediawiki-skin', 'skins/someskin/', 'author/someskin-skin'),
             array('mediawiki-skin', 'skins/someskin/', 'author/someskin'),
+            array('miaoxing-plugin', 'plugins/plugin/', 'shama/plugin'),
+            array('miaoxing-plugin', 'plugins/my-plugin/', 'shama/my-plugin'),
+            array('miaoxing-plugin', 'plugins/MyPlugin/', 'shama/MyPlugin'),
+            array('miaoxing-plugin', 'plugins/my_plugin/', 'shama/my_plugin'),
             array('microweber-module', 'userfiles/modules/my-thing/', 'author/my-thing-module'),
             array('modulework-module', 'modules/my_package/', 'shama/my_package'),
             array('moodle-mod', 'mod/my_package/', 'shama/my_package'),
             array('october-module', 'modules/my_plugin/', 'shama/my_plugin'),
             array('october-plugin', 'plugins/shama/my_plugin/', 'shama/my_plugin'),
-            array('october-theme', 'themes/my_theme/', 'shama/my_theme'),
+            array('october-theme', 'themes/shama-my_theme/', 'shama/my_theme'),
             array('piwik-plugin', 'plugins/VisitSummary/', 'shama/visit-summary'),
             array('prestashop-module', 'modules/a-module/', 'vendor/a-module'),
             array('prestashop-theme', 'themes/a-theme/', 'vendor/a-theme'),
@@ -394,12 +394,14 @@ class InstallerTest extends TestCase
             array('phpbb-extension', 'ext/test/foo/', 'test/foo'),
             array('phpbb-style', 'styles/foo/', 'test/foo'),
             array('phpbb-language', 'language/foo/', 'test/foo'),
-            array('pimcore-plugin', 'plugins/MyPlugin/', 'ubikz/my_plugin'),
             array('plentymarkets-plugin', 'HelloWorld/', 'plugin-hello-world'),
             array('ppi-module', 'modules/foo/', 'test/foo'),
             array('puppet-module', 'modules/puppet-name/', 'puppet/puppet-name'),
             array('porto-container', 'app/Containers/container-name/', 'test/container-name'),
             array('radphp-bundle', 'src/Migration/', 'atkrad/migration'),
+            array('processwire-module', 'site/modules/HelloWorld/', 'test/hello-world'),
+            array('quicksilver-script', 'web/private/scripts/quicksilver/quicksilver-script', 'shama/quicksilver-script'),
+            array('quicksilver-module', 'web/private/scripts/quicksilver/quicksilver-module', 'shama/quicksilver-module'),
             array('redaxo-addon', 'redaxo/include/addons/my_plugin/', 'shama/my_plugin'),
             array('redaxo-bestyle-plugin', 'redaxo/include/addons/be_style/plugins/my_plugin/', 'shama/my_plugin'),
             array('redaxo5-addon', 'redaxo/src/addons/my_plugin/', 'shama/my_plugin'),
@@ -422,17 +424,18 @@ class InstallerTest extends TestCase
             array('silverstripe-theme', 'themes/my_theme/', 'shama/my_theme'),
             array('smf-module', 'Sources/my_module/', 'shama/my_module'),
             array('smf-theme', 'Themes/my_theme/', 'shama/my_theme'),
+            array('starbug-module', 'modules/my_module/', 'shama/my_module'),
+            array('starbug-theme', 'themes/my_theme/', 'shama/my_theme'),
+            array('starbug-custom-module', 'app/modules/my_module/', 'shama/my_module'),
+            array('starbug-custom-theme', 'app/themes/my_theme/', 'shama/my_theme'),
             array('sylius-theme', 'themes/my_theme/', 'shama/my_theme'),
-            array('symfony1-plugin', 'plugins/sfShamaPlugin/', 'shama/sfShamaPlugin'),
-            array('symfony1-plugin', 'plugins/sfShamaPlugin/', 'shama/sf-shama-plugin'),
+            array('tastyigniter-extension', 'extensions/shama/my_extension/', 'shama/my_extension'),
+            array('tastyigniter-theme', 'themes/my_theme/', 'shama/my_theme'),
             array('thelia-module', 'local/modules/my_module/', 'shama/my_module'),
             array('thelia-frontoffice-template', 'templates/frontOffice/my_template_fo/', 'shama/my_template_fo'),
             array('thelia-backoffice-template', 'templates/backOffice/my_template_bo/', 'shama/my_template_bo'),
             array('thelia-email-template', 'templates/email/my_template_email/', 'shama/my_template_email'),
             array('tusk-task', '.tusk/tasks/my_task/', 'shama/my_task'),
-            array('typo3-flow-package', 'Packages/Application/my_package/', 'shama/my_package'),
-            array('typo3-flow-build', 'Build/my_package/', 'shama/my_package'),
-            array('typo3-cms-extension', 'typo3conf/ext/my_extension/', 'shama/my_extension'),
             array('userfrosting-sprinkle', 'app/sprinkles/my_sprinkle/', 'shama/my_sprinkle'),
             array('vanilla-plugin', 'plugins/my_plugin/', 'shama/my_plugin'),
             array('vanilla-theme', 'themes/my_theme/', 'shama/my_theme'),
@@ -466,15 +469,9 @@ class InstallerTest extends TestCase
         );
     }
 
-    /**
-     * testGetCakePHPInstallPathException
-     *
-     * @return void
-     *
-     * @expectedException \InvalidArgumentException
-     */
-    public function testGetCakePHPInstallPathException()
+    public function testGetCakePHPInstallPathException(): void
     {
+        $this->expectException('InvalidArgumentException');
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('shama/ftp', '1.0.0', '1.0.0');
 
@@ -482,10 +479,7 @@ class InstallerTest extends TestCase
         $result = $installer->getInstallPath($package);
     }
 
-    /**
-     * testCustomInstallPath
-     */
-    public function testCustomInstallPath()
+    public function testCustomInstallPath(): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('shama/ftp', '1.0.0', '1.0.0');
@@ -499,13 +493,10 @@ class InstallerTest extends TestCase
             ),
         ));
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('my/custom/path/Ftp/', $result);
+        $this->assertEquals(getcwd() . '/my/custom/path/Ftp/', $result);
     }
 
-    /**
-     * testCustomInstallerName
-     */
-    public function testCustomInstallerName()
+    public function testCustomInstallerName(): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('shama/cakephp-ftp-plugin', '1.0.0', '1.0.0');
@@ -514,13 +505,10 @@ class InstallerTest extends TestCase
             'installer-name' => 'FTP',
         ));
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('Plugin/FTP/', $result);
+        $this->assertEquals(getcwd() . '/Plugin/FTP/', $result);
     }
 
-    /**
-     * testCustomTypePath
-     */
-    public function testCustomTypePath()
+    public function testCustomTypePath(): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('slbmeh/my_plugin', '1.0.0', '1.0.0');
@@ -533,13 +521,10 @@ class InstallerTest extends TestCase
             ),
         ));
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('my/custom/path/my_plugin/', $result);
+        $this->assertEquals(getcwd() . '/my/custom/path/my_plugin/', $result);
     }
 
-    /**
-     * testVendorPath
-     */
-    public function testVendorPath()
+    public function testVendorPath(): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('penyaskito/my_module', '1.0.0', '1.0.0');
@@ -552,13 +537,10 @@ class InstallerTest extends TestCase
           ),
         ));
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('modules/custom/my_module/', $result);
+        $this->assertEquals(getcwd() . '/modules/custom/my_module/', $result);
     }
 
-    /**
-     * testStringPath
-     */
-    public function testStringPath()
+    public function testStringPath(): void
     {
         $installer = new Installer($this->io, $this->composer);
         $package = new Package('penyaskito/my_module', '1.0.0', '1.0.0');
@@ -569,49 +551,31 @@ class InstallerTest extends TestCase
           ),
         ));
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('modules/custom/my_module/', $result);
+        $this->assertEquals(getcwd() . '/modules/custom/my_module/', $result);
     }
 
-    /**
-     * testNoVendorName
-     */
-    public function testNoVendorName()
+    public function testNoVendorName(): void
     {
         $installer = new Installer($this->io, $this->composer);
-        $package = new Package('sfPhpunitPlugin', '1.0.0', '1.0.0');
+        $package = new Package('vanillaPlugin', '1.0.0', '1.0.0');
 
-        $package->setType('symfony1-plugin');
+        $package->setType('vanilla-plugin');
         $result = $installer->getInstallPath($package);
-        $this->assertEquals('plugins/sfPhpunitPlugin/', $result);
+        $this->assertEquals(getcwd() . '/plugins/vanillaPlugin/', $result);
     }
 
-    /**
-     * testTypo3Inflection
-     */
-    public function testTypo3Inflection()
-    {
-        $installer = new Installer($this->io, $this->composer);
-        $package = new Package('typo3/fluid', '1.0.0', '1.0.0');
-
-        $package->setAutoload(array(
-            'psr-0' => array(
-                'TYPO3\\Fluid' => 'Classes',
-            ),
-        ));
-
-        $package->setType('typo3-flow-package');
-        $result = $installer->getInstallPath($package);
-        $this->assertEquals('Packages/Application/TYPO3.Fluid/', $result);
-    }
-
-    public function testUninstallAndDeletePackageFromLocalRepo()
+    public function testUninstallAndDeletePackageFromLocalRepo(): void
     {
         $package = new Package('foo', '1.0.0', '1.0.0');
 
-        $installer = $this->getMock('Composer\Installers\Installer', array('getInstallPath'), array($this->io, $this->composer));
+        $installer = $this->getMockBuilder(Installer::class)
+            ->setMethods(array('getInstallPath', 'removeCode'))
+            ->setConstructorArgs(array($this->io, $this->composer))
+            ->getMock();
         $installer->expects($this->atLeastOnce())->method('getInstallPath')->with($package)->will($this->returnValue(sys_get_temp_dir().'/foo'));
+        $installer->expects($this->atLeastOnce())->method('removeCode')->with($package)->will($this->returnValue(null));
 
-        $repo = $this->getMock('Composer\Repository\InstalledRepositoryInterface');
+        $repo = $this->repository;
         $repo->expects($this->once())->method('hasPackage')->with($package)->will($this->returnValue(true));
         $repo->expects($this->once())->method('removePackage')->with($package);
 
@@ -619,11 +583,10 @@ class InstallerTest extends TestCase
     }
 
     /**
-     * testDisabledInstallers
-     *
-     * @dataProvider dataForTestDisabledInstallers
+     * @dataProvider disabledInstallersProvider
+     * @param mixed $disabled
      */
-    public function testDisabledInstallers($disabled, $type, $expected)
+    public function testDisabledInstallers($disabled, string $type, bool $expected): void
     {
         $this->composer->getPackage()->setExtra(array(
             'installer-disable' => $disabled,
@@ -631,12 +594,7 @@ class InstallerTest extends TestCase
         $this->testSupports($type, $expected);
     }
 
-    /**
-     * dataForTestDisabledInstallers
-     *
-     * @return array
-     */
-    public function dataForTestDisabledInstallers()
+    public function disabledInstallersProvider(): array
     {
         return array(
             array(false, "drupal-module", true),

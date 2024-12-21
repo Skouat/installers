@@ -5,6 +5,7 @@ namespace Composer\Installers\Test;
 use Composer\Installers\BitrixInstaller;
 use Composer\Package\Package;
 use Composer\Composer;
+use Composer\Package\RootPackage;
 
 /**
  * Tests for the BitrixInstaller Class
@@ -19,31 +20,26 @@ class BitrixInstallerTest extends TestCase
     /** @var Composer */
     private $composer;
 
-
-    /**
-     * Sets up the fixture, for example, instantiate the class-under-test.
-     *
-     * This method is called before a test is executed.
-     */
-    final function setUp()
+    public function setUp(): void
     {
         $this->composer = new Composer();
+        $this->composer->setPackage(new RootPackage('foo/bar', '1.0.0', '1.0.0'));
     }
 
     /**
-     * @param string $vars
-     * @param string $expectedVars
+     * @param string[] $vars
+     * @param string[] $expectedVars
      *
      * @covers ::inflectPackageVars
      *
-     * @dataProvider provideExpectedInflectionResults
+     * @dataProvider expectedInflectionResultsProvider
      */
-    final public function testInflectPackageVars($vars, $expectedVars)
+    public function testInflectPackageVars(array $vars, array $expectedVars): void
     {
-
         $this->installer = new BitrixInstaller(
             new Package($vars['name'], '4.2', '4.2'),
-            $this->composer
+            $this->composer,
+            $this->getMockIO()
         );
         $actual = $this->installer->inflectPackageVars($vars);
         $this->assertEquals($actual, $expectedVars);
@@ -51,10 +47,8 @@ class BitrixInstallerTest extends TestCase
 
     /**
      * Provides various parameters for packages and the expected result after inflection
-     *
-     * @return array
      */
-    final public function provideExpectedInflectionResults()
+    public function expectedInflectionResultsProvider(): array
     {
         return array(
             //check bitrix-dir is correct

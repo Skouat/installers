@@ -1,4 +1,5 @@
 <?php
+
 namespace Composer\Installers\Test;
 
 use Composer\Composer;
@@ -14,50 +15,33 @@ use Composer\Package\PackageInterface;
 class PiwikInstallerTest extends TestCase
 {
     /**
-     * @varComposer
+     * @var Composer
      */
     private $composer;
-
-    /**
-     * @var PackageInterface
-     */
-    private $io;
 
     /**
      * @var Package
      */
     private $package;
 
-    /**
-     * setUp
-     *
-     * @return void
-     */
-    public function setUp()
+    public function setUp(): void
     {
         $this->package = new Package('VisitSummary', '1.0', '1.0');
-        $this->io = $this->getMock('Composer\IO\PackageInterface');
         $this->composer = new Composer();
     }
 
-    /**
-     * testInflectPackageVars
-     *
-     * @return void
-     */
-    public function testInflectPackageVars()
+    public function testInflectPackageVars(): void
     {
-        $installer = new PiwikInstaller($this->package, $this->composer);
+        $installer = new PiwikInstaller($this->package, $this->composer, $this->getMockIO());
         $result = $installer->inflectPackageVars(array('name' => 'VisitSummary'));
         $this->assertEquals($result, array('name' => 'VisitSummary'));
 
-        $installer = new PiwikInstaller($this->package, $this->composer);
+        $installer = new PiwikInstaller($this->package, $this->composer, $this->getMockIO());
         $result = $installer->inflectPackageVars(array('name' => 'visit-summary'));
         $this->assertEquals($result, array('name' => 'VisitSummary'));
 
-        $installer = new PiwikInstaller($this->package, $this->composer);
+        $installer = new PiwikInstaller($this->package, $this->composer, $this->getMockIO());
         $result = $installer->inflectPackageVars(array('name' => 'visit_summary'));
         $this->assertEquals($result, array('name' => 'VisitSummary'));
     }
-
 }

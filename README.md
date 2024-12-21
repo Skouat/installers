@@ -1,6 +1,6 @@
 # A Multi-Framework [Composer](http://getcomposer.org) Library Installer
 
-[![Build Status](http://img.shields.io/travis/composer/installers.svg)](http://travis-ci.org/composer/installers)
+[![Continuous Integration](https://github.com/composer/installers/workflows/Continuous%20Integration/badge.svg?branch=main)](https://github.com/composer/installers/actions)
 
 This is for PHP package authors to require in their `composer.json`. It will
 install their package to the correct location based on the specified package
@@ -16,14 +16,19 @@ custom installer to handle it](https://getcomposer.org/doc/articles/custom-insta
 
 **Natively Supported Frameworks**:
 
-The following frameworks natively work with Composer and will be
+Most frameworks these days natively work with Composer and will be
 installed to the default `vendor` directory. `composer/installers`
-is not needed to install packages with these frameworks:
+is **not needed** to install packages with these frameworks.
 
-* Aura
-* Symfony2
-* Yii
-* Yii2
+## Alternative to custom installers with Composer 2.1+
+
+As of Composer 2.1, the `Composer\InstalledVersions` class has a
+[`getInstalledPackagesByType`](https://getcomposer.org/doc/07-runtime.md#knowing-which-packages-of-a-given-type-are-installed)
+method which can let you figure out at runtime which plugins/modules/extensions are installed.
+
+It is highly recommended to use that instead of building new custom
+installers if you are building a new application. This has the advantage of leaving
+all vendor code in the vendor directory, and not requiring custom installer code.
 
 ## Current Supported Package Types
 
@@ -33,11 +38,12 @@ is not needed to install packages with these frameworks:
 
 | Framework    | Types
 | ---------    | -----
-| Aimeos       | `aimeos-extension`
+| Akaunting    | `akaunting-module`
 | Asgard       | `asgard-module`<br>`asgard-theme`
 | Attogram     | `attogram-module`
 | AGL          | `agl-module`
 | Bonefish     | `bonefish-package`
+| Botble       | `botble-plugin`<br>`botble-theme`
 | AnnotateCms  | `annotatecms-module`<br>`annotatecms-component`<br>`annotatecms-service`
 | Bitrix       | `bitrix-module` (deprecated) <br>`bitrix-component` (deprecated) <br>`bitrix-theme` (deprecated) <br><br> `bitrix-d7-module` <br> `bitrix-d7-component` <br> `bitrix-d7-template`
 | CakePHP 2+   | **`cakephp-plugin`**
@@ -47,26 +53,25 @@ is not needed to install packages with these frameworks:
 | Cockpit      | `cockpit-module`
 | CodeIgniter  | `codeigniter-library`<br>`codeigniter-third-party`<br>`codeigniter-module`
 | concrete5    | `concrete5-core`<br>`concrete5-package`<br>`concrete5-theme`<br>`concrete5-block`<br>`concrete5-update`
-| Craft        | `craft-plugin`
+| ConcreteCMS  | `concretecms-core`<br>`concretecms-package`<br>`concretecms-theme`<br>`concretecms-block`<br>`concretecms-update`
 | Croogo       | `croogo-plugin`<br>`croogo-theme`
 | Decibel      | `decibel-app`
 | Dframe       | `dframe-module`
 | DokuWiki     | `dokuwiki-plugin`<br>`dokuwiki-template`
 | Dolibarr     | `dolibarr-module`
-| Drupal       | <b>`drupal-core`<br>`drupal-module`<br>`drupal-theme`</b><br>`drupal-library`<br>`drupal-profile`<br>`drupal-database-driver`<br>`drupal-drush`<br>`drupal-custom-theme`<br>`drupal-custom-module`<br>`drupal-custom-profile`<br>`drupal-drupal-multisite`<br>`drupal-console`<br>`drupal-console-language`<br>`drupal-config`
+| Drupal       | <b>`drupal-core`<br>`drupal-module`<br>`drupal-theme`</b><br>`drupal-library`<br>`drupal-profile`<br>`drupal-database-driver`<br>`drupal-drush`<br>`drupal-custom-theme`<br>`drupal-custom-module`<br>`drupal-custom-profile`<br>`drupal-drupal-multisite`<br>`drupal-console`<br>`drupal-console-language`<br>`drupal-config`<br>`drupal-recipe`
 | Elgg         | `elgg-plugin`
 | Eliasis      | `eliasis-component`<br>`eliasis-module`<br>`eliasis-plugin`<br>`eliasis-template`
 | ExpressionEngine 3         | `ee3-addon`<br>`ee3-theme`
 | eZ Platform  | `ezplatform-assets`<br>`ezplatform-meta-assets`
+| ForkCMS ^v6.x| `fork-cms-module`<br>`fork-cms-theme`
 | FuelPHP v1.x | `fuel-module`<br>`fuel-package`<br/>`fuel-theme`
 | FuelPHP v2.x | `fuelphp-component`
 | Grav         | `grav-plugin`<br>`grav-theme`
 | Hurad        | `hurad-plugin`<br>`hurad-theme`
 | ImageCMS     | `imagecms-template`<br>`imagecms-module`<br>`imagecms-library`
 | iTop         | `itop-extension`
-| Joomla       | `joomla-component`<br>`joomla-module`<br>`joomla-template`<br>`joomla-plugin`<br>`joomla-library`
 | Kanboard     | `kanboard-plugin`
-| Kirby        | **`kirby-plugin`**<br>`kirby-field`<br>`kirby-tag`
 | Known        | `known-plugin`<br>`known-theme`<br>`known-console`
 | KodiCMS      | `kodicms-plugin`<br>`kodicms-media`
 | Kohana       | **`kohana-module`**
@@ -78,24 +83,29 @@ is not needed to install packages with these frameworks:
 | majima       | `majima-plugin`
 | Mako         | `mako-package`
 | MantisBT     | `mantisbt-plugin`
-| Mautic       | `mautic-plugin`<br>`mautic-theme`
+| Matomo       | `matomo-plugin`
+| Mautic       | `mautic-core`<br>`mautic-plugin`<br>`mautic-theme`
 | Maya         | `maya-module`
 | MODX         | `modx-extra`
 | MODX Evo     | `modxevo-snippet`<br>`modxevo-plugin`<br>`modxevo-module`<br>`modxevo-template`<br>`modxevo-lib`
 | MediaWiki    | `mediawiki-extension`
+| Miaoxing     | `miaoxing-plugin`
 | October      | **`october-module`<br>`october-plugin`<br>`october-theme`**
 | OntoWiki     | `ontowiki-extension`<br>`ontowiki-theme`<br>`ontowiki-translation`
 | OXID         | `oxid-module`<br>`oxid-theme`<br>`oxid-out`
 | Osclass      | `osclass-plugin`<br>`osclass-theme`<br>`osclass-language`
 | MODULEWork   | `modulework-module`
-| Moodle       | `moodle-*` (Please [check source](https://raw.githubusercontent.com/composer/installers/master/src/Composer/Installers/MoodleInstaller.php) for all supported types)
+| Moodle       | `moodle-*` (Please [check source](https://github.com/composer/installers/blob/main/src/Composer/Installers/MoodleInstaller.php) for all supported types)
+| Pantheon     | `quicksilver-script`<br>`quicksilver-module`
 | Piwik        | `piwik-plugin`
+| Phifty       | `phifty-bundle`<br>`phifty-framework`<br>`phifty-library`
 | phpBB        | `phpbb-extension`<br>`phpbb-style`<br>`phpbb-language`
-| Pimcore      | `pimcore-plugin`(deprecated, only used for versions <= 4) 
 | Plentymarkets      | `plentymarkets-plugin`
 | PPI          | **`ppi-module`**
+| Prestashop   | `prestashop-module`<br>`prestashop-theme`
 | Puppet       | `puppet-module`
 | Porto        | `porto-container`
+| ProcessWire  | `processwire-module`
 | RadPHP       | `radphp-bundle`
 | REDAXO       | `redaxo-addon`
 | REDAXO bestyle-plugin | `redaxo-bestyle-plugin`
@@ -107,24 +117,22 @@ is not needed to install packages with these frameworks:
 | SilverStripe | `silverstripe-module`<br>`silverstripe-theme`
 | SiteDirect   | `sitedirect-module`<br>`sitedirect-plugin`
 | SMF          | `smf-module`<br>`smf-theme`
+| Starbug      | `starbug-module`<br>`starbug-theme`<br>`starbug-custom-module`<br>`starbug-custom-theme`
 | SyDES        | `sydes-module`<br>`sydes-theme`
 | Sylius       | `sylius-theme`
-| symfony1     | **`symfony1-plugin`**
 | TAO          | `tao-extension`
+| TastyIgniter | **`tastyigniter-module`<br>`tastyigniter-extension`<br>`tastyigniter-theme`**
 | Tusk         | `tusk-task`<br>`tusk-command`<br>`tusk-asset`
-| TYPO3 Flow   | `typo3-flow-package`<br>`typo3-flow-framework`<br>`typo3-flow-plugin`<br>`typo3-flow-site`<br>`typo3-flow-boilerplate`<br>`typo3-flow-build`
-| TYPO3 CMS    | `typo3-cms-extension` (Deprecated in this package, use the [TYPO3 CMS Installers](https://packagist.org/packages/typo3/cms-composer-installers) instead)
 | UserFrosting | `userfrosting-sprinkle`
 | Vanilla      | `vanilla-plugin`<br>`vanilla-theme`
 | Vgmcp        | `vgmcp-bundle`<br>`vgmcp-theme`
 | WHMCS        | `whmcs-addons`<br>`whmcs-fraud`<br>`whmcs-gateways`<br>`whmcs-notifications`<br>`whmcs-registrars`<br>`whmcs-reports`<br>`whmcs-security`<br>`whmcs-servers`<br>`whmcs-social`<br>`whmcs-support`<br>`whmcs-templates`<br>`whmcs-includes`
+| Winter CMS   | **`winter-module`<br>`winter-plugin`<br>`winter-theme`**
 | Wolf CMS     | `wolfcms-plugin`
 | WordPress    | <b>`wordpress-plugin`<br>`wordpress-theme`</b><br>`wordpress-muplugin`<br>`wordpress-dropin`
 | YAWIK        | `yawik-module`
 | Zend         | `zend-library`<br>`zend-extra`<br>`zend-module`
 | Zikula       | `zikula-module`<br>`zikula-theme`
-| Prestashop   | `prestashop-module`<br>`prestashop-theme`
-| Phifty       | `phifty-bundle`<br>`phifty-framework`<br>`phifty-library`
 
 ## Example `composer.json` File
 
@@ -150,7 +158,7 @@ So submit your packages to [packagist.org](http://packagist.org)!
 
 ## Custom Install Paths
 
-If you are consuming a package that uses the `composer/installers` you can
+If you are requiring a package which has one of the supported types you can
 override the install path with the following extra in your `composer.json`:
 
 ```json
@@ -163,7 +171,9 @@ override the install path with the following extra in your `composer.json`:
 }
 ```
 
-A package type can have a custom installation path with a `type:` prefix.
+You can determine a non-standard installation path for all packages of a
+particular type with the `type:` prefix. The type must be one of types
+listed on the supported list above.
 
 ``` json
 {
@@ -175,8 +185,9 @@ A package type can have a custom installation path with a `type:` prefix.
 }
 ```
 
-You can also have the same vendor packages with a custom installation path by
-using the `vendor:` prefix.
+You can also install all packages by a particular vendor to a custom
+installation path by using the `vendor:` prefix. The path will still
+only apply to packages by the vendor with a type in the supported list.
 
 ``` json
 {
@@ -188,8 +199,11 @@ using the `vendor:` prefix.
 }
 ```
 
-These would use your custom path for each of the listed packages. The available
-variables to use in your paths are: `{$name}`, `{$vendor}`, `{$type}`.
+These would use your custom path for each of the matching packages. The
+available variables to use in your paths are: `{$name}`, `{$vendor}`, `{$type}`.
+
+**Note:** If multiple custom installer-paths match for the same package, the first
+one which matches will be used.
 
 ## Custom Install Names
 
@@ -224,7 +238,7 @@ conflicts with `composer/installers` but also have a dependency on a package tha
 
 Installers can be disabled for your project by specifying the extra
 `installer-disable` property. If set to `true`, `"all"`, or `"*"` all installers
-will be disabled. 
+will be disabled.
 
 ```json
 {
@@ -261,7 +275,7 @@ installer names if used in an array. The example below will disable all installe
 }
 ```
 
-## Should we allow dynamic package types or paths? No.
+## Should we allow dynamic package types or paths? No
 
 What are they? The ability for a package author to determine where a package
 will be installed either through setting the path directly in their
@@ -273,4 +287,4 @@ removed. Installers won't do this because it would allow a single package
 author to wipe out entire folders without the user's consent. That user would
 then come here to yell at us.
 
-Anyone still wanting this capability should consider requiring https://github.com/oomphinc/composer-installers-extender.
+Anyone still wanting this capability should consider requiring <https://github.com/oomphinc/composer-installers-extender>.

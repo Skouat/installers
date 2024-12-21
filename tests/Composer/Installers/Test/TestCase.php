@@ -12,18 +12,26 @@
 
 namespace Composer\Installers\Test;
 
+use Composer\Composer;
+use Composer\Config;
+use Composer\IO\IOInterface;
+use Composer\IO\NullIO;
 use Composer\Package\Version\VersionParser;
 use Composer\Package\Package;
 use Composer\Package\AliasPackage;
-use Composer\Package\LinkConstraint\VersionConstraint;
+use Composer\Package\RootPackage;
+use Composer\Semver\Constraint\Constraint;
 use Composer\Util\Filesystem;
-use PHPUnit\Framework\TestCase as BaseTestCase;
+use Composer\Installer\InstallationManager;
+use Composer\Repository\RepositoryManager;
+use Composer\Downloader\DownloadManager;
 
-abstract class TestCase extends BaseTestCase
+abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    private static $parser;
+    /** @var ?VersionParser */
+    private static $parser = null;
 
-    protected static function getVersionParser()
+    protected static function getVersionParser(): VersionParser
     {
         if (!self::$parser) {
             self::$parser = new VersionParser();
@@ -32,34 +40,67 @@ abstract class TestCase extends BaseTestCase
         return self::$parser;
     }
 
-    protected function getVersionConstraint($operator, $version)
+    /**
+     * @phpstan-param '='|'=='|'<'|'<='|'>'|'>='|'<>'|'!=' $operator
+     */
+    protected function getVersionConstraint(string $operator, string $version): Constraint
     {
-        return new VersionConstraint(
+        return new Constraint(
             $operator,
             self::getVersionParser()->normalize($version)
         );
     }
 
-    protected function getPackage($name, $version)
+    protected function getPackage(string $name, string $version): Package
     {
         $normVersion = self::getVersionParser()->normalize($version);
 
         return new Package($name, $normVersion, $version);
     }
 
-    protected function getAliasPackage($package, $version)
+    protected function getAliasPackage(Package $package, string $version): AliasPackage
     {
         $normVersion = self::getVersionParser()->normalize($version);
 
         return new AliasPackage($package, $normVersion, $version);
     }
 
-    protected function ensureDirectoryExistsAndClear($directory)
+    protected function ensureDirectoryExistsAndClear(string $directory): void
     {
         $fs = new Filesystem();
         if (is_dir($directory)) {
             $fs->removeDirectory($directory);
         }
         mkdir($directory, 0777, true);
+    }
+
+    protected function getComposer(): Composer
+    {
+        $composer = new Composer;
+        $composer->setPackage($pkg = new RootPackage('root/pkg', '1.0.0.0', '1.0.0'));
+
+        $composer->setConfig(new Config(false));
+
+        $dm = $this->getMockBuilder(DownloadManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $composer->setDownloadManager($dm);
+
+        $im = $this->getMockBuilder(InstallationManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $composer->setInstallationManager($im);
+
+        $rm = $this->getMockBuilder(RepositoryManager::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $composer->setRepositoryManager($rm);
+
+        return $composer;
+    }
+
+    protected function getMockIO(): IOInterface
+    {
+        return $this->getMockBuilder(IOInterface::class)->getMock();
     }
 }
