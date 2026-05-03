@@ -25,7 +25,7 @@ class PhpBBInstaller extends BaseInstaller
      * @param array $vars
      * @return array
      */
-    public function inflectPackageVars($vars)
+    public function inflectPackageVars(array $vars): array
     {
         if ($vars['type'] === 'extension-language')
         {
@@ -43,12 +43,12 @@ class PhpBBInstaller extends BaseInstaller
     protected function inflectVars($vars, $type)
     {
         $extra = $this->package->getExtra();
-        $pattern = '([a-zA-Z0-9_\x7f-\xff]{2,})-([a-zA-Z0-9_\x7f-\xff]{2,})-'. $type . '-([a-zA-Z0-9_\x7f-\xff]{2,})$#';
+        $pattern = '#([a-zA-Z0-9_\x7f-\xff]{2,})-([a-zA-Z0-9_\x7f-\xff]{2,})-'. $type . '-([a-zA-Z0-9_\x7f-\xff]{2,})$#';
 
         if (preg_match($pattern, $vars['name'], $matches))
         {
-            $vars['vendor'] = isset($extra['phpbb-extension']) ? $extra['phpbb-extension'] : $matches[1] . '/' . $matches[2];
-            $vars['name'] = isset($extra['phpbb-' . $type]) ? $extra['phpbb-' . $type] : $matches[3];
+            $vars['vendor'] = $extra['phpbb-extension'] ?? $matches[1] . '/' . $matches[2];
+            $vars['name'] = $extra['phpbb-' . $type] ?? $matches[3];
         }
 
         return $vars;
