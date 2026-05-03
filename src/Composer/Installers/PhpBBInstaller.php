@@ -22,8 +22,8 @@ class PhpBBInstaller extends BaseInstaller
      *      phpbb-extension-language: foo/phpbb-acme-language-fr
      *      phpbb-extension-style: foo/phpbb-acme-style-my_style
      *
-     * @param array $vars
-     * @return array
+     * @param array<string, string> $vars
+     * @return array<string, string>
      */
     public function inflectPackageVars(array $vars): array
     {
@@ -40,7 +40,12 @@ class PhpBBInstaller extends BaseInstaller
         return $vars;
     }
 
-    protected function inflectVars($vars, $type)
+    /**
+     * @param array<string, string> $vars
+     * @param string $type
+     * @return array<string, string>
+     */
+    protected function inflectVars(array $vars, string $type): array
     {
         $extra = $this->package->getExtra();
         $pattern = '#([a-zA-Z0-9_\x7f-\xff]{2,})-([a-zA-Z0-9_\x7f-\xff]{2,})-'. $type . '-([a-zA-Z0-9_\x7f-\xff]{2,})$#';
